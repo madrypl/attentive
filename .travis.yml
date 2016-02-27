@@ -2,7 +2,11 @@ language: c
 compiler:
   - gcc
 
-install: check libglib2.0-dev
+before_install: 
+  - sudo apt-get -qq update
+
+install:
+  - sudo apt-get install -y check libglib2.0-dev
 
 script: make
 
