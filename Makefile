@@ -9,7 +9,7 @@ LDLIBS = $(shell pkg-config --libs $(LIBRARIES))
 
 LIBRARIES = check glib-2.0
 
-all: test example
+all: test 
 	@echo "+++ All good."""
 
 test: tests/test-parser
