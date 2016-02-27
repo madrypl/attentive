@@ -261,7 +261,7 @@ static int sim800_clock_ntptime(struct cellular *modem, struct timespec *ts)
                 }
 //              printf("sim800: catched UTC timestamp -> %d\n", ts->tv_sec);
                 ts->tv_sec -= 2208988800L;		//UTC to UNIX time conversion
-                printf("sim800: final UNIX timestamp -> %d\n", ts->tv_sec);
+                printf("sim800: final UNIX timestamp -> %ld\n", ts->tv_sec);
                 goto close_conn;
             }
 
