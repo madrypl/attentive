@@ -9,7 +9,7 @@ LDLIBS = $(shell pkg-config --libs $(LIBRARIES)) -lpthread
 
 LIBRARIES = check glib-2.0
 
-all: test 
+all: example test 
 	@echo "+++ All good."""
 
 example: src/example-at src/example-sim800
