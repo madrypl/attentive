@@ -1,5 +1,7 @@
 # Attentive: AT/GSM stack in pure C
 
+[![Build Status](https://travis-ci.org/cloudyourcar/cbar.svg?branch=master)](https://travis-ci.org/cloudyourcar/cbar)
+
 *[NOTE: Open sourced internal company product. Work in progress. Not production/release ready yet.]*
 
 ## Features
