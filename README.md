@@ -1,6 +1,8 @@
 # Attentive: AT/GSM stack in pure C
 
-[![Build Status](https://travis-ci.org/cloudyourcar/cbar.svg?branch=master)](https://travis-ci.org/cloudyourcar/cbar)
+[![Build Status](https://travis-ci.org/cloudyourcar/attentive.svg?branch=master)](https://travis-ci.org/cloudyourcar/attentive)
+
+[![Build Status](https://travis-ci.org/madrypl/attentive.svg?branch=master)](https://travis-ci.org/madrypl/attentive)
 
 *[NOTE: Open sourced internal company product. Work in progress. Not production/release ready yet.]*
 
