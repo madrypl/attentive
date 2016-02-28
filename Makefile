@@ -5,9 +5,9 @@
 # published by Sam Hocevar. See the COPYING file for more details.
 
 CFLAGS = $(shell pkg-config --cflags $(LIBRARIES)) -std=c99 -g -Wall -Iinclude -D_GNU_SOURCE
-LDLIBS = $(shell pkg-config --libs $(LIBRARIES)) -lpthread
+LDLIBS = $(shell pkg-config --libs $(LIBRARIES)) -lpthread -lrt
 
-LIBRARIES = check glib-2.0
+LIBRARIES = check glib-2.0 
 
 all: example test 
 	@echo "+++ All good."""
