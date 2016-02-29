@@ -107,11 +107,16 @@ static enum at_response_type scan_line(const char *line, size_t len, void *arg)
 static void handle_urc(const char *line, size_t len, void *arg)
 {
     struct cellular_sim800 *priv = arg;
+    int incoming_msg_id = 0;
 
     printf("[sim800@%p] urc: %.*s\n", priv, (int) len, line);
 
     if (sscanf(line, "+FTPGET: 1,%d", &priv->ftpget1_status) == 1)
         return;
+#if CONFIG_ENABLE_SMS
+    if (sscanf(line, "+CMTI: SM,%d", incoming_msg_id) == 1)
+        return;
+#endif
 }
 
 static const struct at_callbacks sim800_callbacks = {

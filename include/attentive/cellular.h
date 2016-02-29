@@ -37,6 +37,7 @@ struct cellular {
 
     /* Private fields. */
     const char *apn;
+    const char *msg_center;
     int pdp_failures;
     int pdp_threshold;
 };
@@ -78,6 +79,14 @@ struct cellular_ops {
     int (*ftp_close)(struct cellular *modem);
 
     int (*locate)(struct cellular *modem, float *latitude, float *longitude, float *altitude);
+
+    /* 3GPP TS 27.005 */
+    /* TODO: need to register new meassage callback ? */
+    int (*sms_list)(struct cellular *modem);
+    int (*sms_read)(struct cellular *modem, int msgid, char *message);
+    int (*sms_send)(struct cellular *modem, const char *recipent, const char *message);
+    int (*sms_delete)(struct cellular *modem);
+
 };
 
 
