@@ -183,6 +183,10 @@ static int sim800_attach(struct cellular *modem)
         "AT+CMEE=2",                    /* Enable extended error reporting. */
         "AT+CLTS=0",                    /* Don't sync RTC with network time, it's broken. */
         "AT+CIURC=0",                   /* Disable "Call Ready" URC. */
+        "AT+CMGF=1",                    /* Set SMS mode to text */
+        "AT+CPMS=SM,SM,SM",             /* Set SMS storage to SIM card */
+        "AT+CSMS=0",                    /* SMS 3GPP TS 27.005 Phase 2 v. 4.7.0 cmd set*/
+        "AT+CNMI=2",                    /* Sim800 buffer incoming message's URC */
         "AT&W0",                        /* Save configuration. */
         NULL
     };
