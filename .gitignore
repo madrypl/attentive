@@ -6,3 +6,8 @@
 .*.swp
 .*.swo
 html/
+cscope.out
+tags
+tests/mock
+tests/*runner
+tests/*runner.c
