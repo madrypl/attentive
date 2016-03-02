@@ -14,6 +14,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+/* TODO: REMOVE IT FROM HERE */
+#include <parser-private.h>
+
 /**
  * AT response type.
  *

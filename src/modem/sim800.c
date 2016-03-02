@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 #include "common.h"
+#include "sim800-private.h"
 
 /*
  * SIM800 probably holds the highly esteemed position of the world's worst
@@ -28,20 +29,6 @@
  * - no response at all (AT&K0)
  * We work it all around, but it makes the code unnecessarily complex.
  */
-
-#define SIM800_AUTOBAUD_ATTEMPTS 5
-#define SIM800_WAITACK_TIMEOUT 60
-#define SIM800_FTP_TIMEOUT 60
-
-enum sim800_socket_status {
-    SIM800_SOCKET_STATUS_ERROR = -1,
-    SIM800_SOCKET_STATUS_UNKNOWN = 0,
-    SIM800_SOCKET_STATUS_CONNECTED = 1,
-};
-
-#define SIM800_NSOCKETS                 6
-#define SIM800_CONNECT_TIMEOUT          60
-#define SIM800_CIPCFG_RETRIES           10
 
 static const char *const sim800_urc_responses[] = {
     "+CIPRXGET: 1,",    /* incoming socket data notification */
@@ -65,12 +52,6 @@ static const char *const sim800_urc_responses[] = {
     NULL
 };
 
-struct cellular_sim800 {
-    struct cellular dev;
-
-    int ftpget1_status;
-    enum sim800_socket_status socket_status[SIM800_NSOCKETS];
-};
 
 static enum at_response_type scan_line(const char *line, size_t len, void *arg)
 {

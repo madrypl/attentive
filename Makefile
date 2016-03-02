@@ -4,17 +4,18 @@
 # the terms of the Do What The Fuck You Want To Public License, Version 2, as
 # published by Sam Hocevar. See the COPYING file for more details.
 
-CFLAGS = $(shell pkg-config --cflags $(LIBRARIES)) -std=c99 -g -Wall -Iinclude -D_GNU_SOURCE
 LDLIBS = $(shell pkg-config --libs $(LIBRARIES)) -lpthread -lrt
+CFLAGS = $(shell pkg-config --cflags $(LIBRARIES)) -std=c99 -g -Wall -D_GNU_SOURCE
+CFLAGS += $(addprefix -I,$(INCLUDES))
 
-INCLUDES = 
+INCLUDES = include src src/modem
 LIBRARIES = check glib-2.0 
 
 TEST_ENABLE ?= false
 
 ifeq ($(TEST_ENABLE),true)
-RUBY = ~/usr/bin/ruby
-LDLIBS += -l$(MOCK_LIB)
+RUBY ?= ~/usr/bin/ruby
+
 # Mocking library
 CMOCK = lib/cmock
 CMOCK_SRC = $(wildcard $(CMOCK)/src/*.c)
@@ -22,13 +23,18 @@ CMOCK_OBJ = $(CMOCK_SRC:.c=.o)
 INCLUDES += $(CMOCK)/src
 
 # Modules to be mocked (need provide header file)
-MOCK = include/attentive/parser.h
+MOCK = include/attentive/parser.h include/attentive/cellular.h \
+	   include/attentive/at.h include/attentive/at-unix.h \
+	   src/modem/common.h
+
 MOCK_SRC = $(addprefix $(TESTDEF)/mock/mock_,$(notdir $(MOCK:.h=.c)))
 MOCK_OBJ = $(MOCK_SRC:.c=.o)
 MOCK_GEN = MOCK_OUT=./$(TESTDEF)/mock \
 		   CMOCK_DIR=./$(CMOCK) \
 		   MOCK_PREFIX='mock_' \
 		   $(RUBY) $(CMOCK)/scripts/create_mock.rb
+
+# mock ups have to be in library archive, because of lining dependencies
 MOCK_LIB = libmock.a
 INCLUDES += $(TESTDEF)/mock
 
@@ -47,13 +53,14 @@ TESTDEF_OBJ = $(TESTDEF_SRC:.c=.o)
 # RUNNER = RUNNER.c + TESTDEF + PROJFILE + libmock.a
 RUNNER = $(patsubst %-test.c,%-runner,$(TESTDEF_SRC))
 RUNNER_SRC = $(addsuffix .c,$(RUNNER))
+RUNNER_OBJ = $(RUNNER_SRC:.c=.o)
 RUNNER_GEN = $(RUBY) $(UNITY)/auto/generate_test_runner.rb
 
 # TODO: get rid of it... try to cmock include <attentive/parser.h> instead <parser.h>
-# TODO: need to handle anonymous structs in testing
+# TODO: need to handle anonymous structs in testing (handle -private.h inclusion)
 INCLUDES += include/attentive
-CFLAGS += $(addprefix -I,$(INCLUDES))
 endif
+
 
 all: example test 
 	@echo "+++ All good."""
@@ -61,8 +68,9 @@ all: example test
 example: src/example-at src/example-sim800
 
 ifeq ($(TEST_ENABLE),true)
-test: $(RUNNER)
-	$(foreach x,$^,./x;)
+mocklib: $(MOCK_LIB)
+test:  $(RUNNER)
+	$(foreach x,$^,./$(x);)
 else
 test: tests/test-parser
 	@echo "+++ Running parser test suite."
@@ -75,6 +83,7 @@ clean:
 ifeq ($(TEST_ENABLE),true)
 	$(RM) -r tests/mock
 	$(RM) tests/*runner.c tests/*runner
+	$(RM) $(MOCK_LIB)
 endif
 
 PARSER = include/attentive/parser.h
@@ -98,22 +107,27 @@ tests/test-parser: tests/test-parser.o src/parser.o
 
 ifeq ($(TEST_ENABLE),true)
 
-$(MOCK_OBJ): $(MOCK_SRC)
 $(MOCK_LIB): $(MOCK_OBJ)
+	$(AR) rcs $@ $^
 
-tests/%-runner: tests/%-runner.o tests/%-test.o src/%.o $(UNITY)/src/unity.o
+$(RUNNER): tests/%-runner: tests/%-runner.o tests/%-test.o src/%.o $(UNITY)/src/unity.o $(CMOCK_OBJ) $(MOCK_LIB)
 	@echo "Linkink test suite runner"
-	$(CC) $^ $(LDFLAGS) -o $@
+	$(CC) $^ $(LDLIBS) -o $@
 
-tests/mock/mock-%.c: include/attentive/%.h
+tests/mock/mock_%.c: include/attentive/%.h
 	@echo "Generating mockups '$(notdir $<)': '$(notdir $@)'"
 	@mkdir -p $(dir $@)
 	@$(MOCK_GEN) $< >/dev/null
 
-%-runner.c: %-test.c
+tests/mock/mock_%.c: src/modem/%.h 
+	@echo "Generating mockups '$(notdir $<)': '$(notdir $@)'"
+	@mkdir -p $(dir $@)
+	@$(MOCK_GEN) $< >/dev/null
+
+$(RUNNER_SRC): %-runner.c: %-test.c
 	@echo "Generating test suite runner '$(notdir $<)': '$(notdir $@)'"
 	@$(RUNNER_GEN) $< $@
 
 endif
 
-.PHONY: all test clean
+.PHONY: all test mocklib clean
