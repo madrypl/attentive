@@ -5,7 +5,7 @@
  * the terms of the Do What The Fuck You Want To Public License, Version 2, as
  * published by Sam Hocevar. See the COPYING file for more details.
  */
-
+#include <assert.h>
 #include <attentive/cellular.h>
 
 #include "modem/common.h"
@@ -22,7 +22,7 @@ int cellular_attach(struct cellular *modem, struct at *at, const char *apn)
 
     /* Reset PDP failure counters. */
     cellular_pdp_success(modem);
-
+    assert(modem->ops != NULL);
     return modem->ops->attach ? modem->ops->attach(modem) : 0;
 }
 
@@ -32,8 +32,10 @@ int cellular_detach(struct cellular *modem)
     if (!modem->at)
         return 0;
 
-    int result = modem->ops->detach? modem->ops->detach(modem) : 0;
+    assert(modem->ops != NULL);
+    int result = modem->ops->detach ? modem->ops->detach(modem) : 0;
     modem->at = NULL;
+    modem->apn = NULL;
     return result;
 }
 
