@@ -45,6 +45,14 @@ static struct cellular dummy_modem;
 static struct at expected_at;
 static struct at dummy_at;
 
+static int expected_action(struct cellular *modem) { return 0; }
+static int expected_fail_action(struct cellular *modem) { return -1; }
+static int unexpected_action(struct cellular *modem)
+{
+    TEST_FAIL();
+    return -1; /* just for avoid compiler warning */
+}
+
 void setUp(void)
 {
     memset(&dummy_modem, 0, sizeof(dummy_modem));
@@ -55,13 +63,6 @@ void tearDown(void)
 {
 }
 
-static int expected_action(struct cellular *modem) { return 0; }
-static int expected_fail_action(struct cellular *modem) { return -1; }
-static int unexpected_action(struct cellular *modem)
-{
-    TEST_FAIL();
-    return -1; /* just for avoid compiler warning */
-}
 
 void test_cellular_attach_AlreadyAttached(void)
 {
