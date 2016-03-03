@@ -5,9 +5,9 @@
  * the terms of the Do What The Fuck You Want To Public License, Version 2, as
  * published by Sam Hocevar. See the COPYING file for more details.
  */
-
 #include <attentive/cellular.h>
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -33,6 +33,9 @@
 
 int cellular_pdp_request(struct cellular *modem)
 {
+    assert(modem != NULL);
+    assert(modem->ops != NULL);
+
     if (modem->pdp_failures >= modem->pdp_threshold) {
         /* Possibly stuck PDP context; close it. */
         modem->ops->pdp_close(modem);
