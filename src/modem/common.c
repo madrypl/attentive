@@ -48,13 +48,13 @@ int cellular_pdp_request(struct cellular *modem)
     return 0;
 }
 
-void cellular_pdp_success(struct cellular *modem)
+inline void cellular_pdp_success(struct cellular *modem)
 {
     modem->pdp_failures = 0;
     modem->pdp_threshold = PDP_RETRY_THRESHOLD_INITIAL;
 }
 
-void cellular_pdp_failure(struct cellular *modem)
+inline void cellular_pdp_failure(struct cellular *modem)
 {
     modem->pdp_failures++;
 }
