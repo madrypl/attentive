@@ -13,4 +13,4 @@ tests/*runner
 tests/*runner.c
 tests/modem/*runner
 tests/modem/*runner.c
-
+libmock.a

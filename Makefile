@@ -16,6 +16,9 @@ TEST_ENABLE ?= false
 ifeq ($(TEST_ENABLE),true)
 RUBY ?= ~/usr/bin/ruby
 
+# Configure sources for test
+CFLAGS += -DTEST 
+
 # Mocking library
 CMOCK = lib/cmock
 CMOCK_SRC = $(wildcard $(CMOCK)/src/*.c)
@@ -29,8 +32,8 @@ MOCK = include/attentive/parser.h include/attentive/cellular.h \
 
 MOCK_SRC = $(addprefix $(TESTDEF)/mock/mock_,$(notdir $(MOCK:.h=.c)))
 MOCK_OBJ = $(MOCK_SRC:.c=.o)
-MOCK_GEN = MOCK_OUT=./$(TESTDEF)/mock \
-		   CMOCK_DIR=./$(CMOCK) \
+MOCK_GEN = CMOCK_DIR=./$(CMOCK) \
+		   MOCK_OUT=./$(TESTDEF)/mock \
 		   MOCK_PREFIX='mock_' \
 		   $(RUBY) $(CMOCK)/scripts/create_mock.rb
 
@@ -56,8 +59,6 @@ RUNNER_SRC = $(addsuffix .c,$(RUNNER))
 RUNNER_OBJ = $(RUNNER_SRC:.c=.o)
 RUNNER_GEN = $(RUBY) $(UNITY)/auto/generate_test_runner.rb
 
-# TODO: get rid of it... try to cmock include <attentive/parser.h> instead <parser.h>
-# TODO: need to handle anonymous structs in testing (handle -private.h inclusion)
 INCLUDES += include/attentive
 endif
 
@@ -106,7 +107,8 @@ src/example-sim800: src/example-sim800.o src/modem/sim800.o src/modem/common.o s
 tests/test-parser: tests/test-parser.o src/parser.o
 
 ifeq ($(TEST_ENABLE),true)
-
+$(RUNNER_OBJ): $(MOCK_OBJ)
+$(MOCK_OBJ): $(MOCK_SRC)
 $(MOCK_LIB): $(MOCK_OBJ)
 	$(AR) rcs $@ $^
 
