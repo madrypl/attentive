@@ -60,6 +60,9 @@ RUNNER_OBJ = $(RUNNER_SRC:.c=.o)
 RUNNER_GEN = $(RUBY) $(UNITY)/auto/generate_test_runner.rb
 
 INCLUDES += include/attentive
+else
+# disable assertion in production build
+CFLAGS += -DNDEBUG
 endif
 
 
