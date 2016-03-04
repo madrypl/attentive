@@ -14,7 +14,7 @@ LIBRARIES = check glib-2.0
 TEST_ENABLE ?= false
 
 ifeq ($(TEST_ENABLE),true)
-RUBY ?= ~/usr/bin/ruby
+RUBY ?= ruby
 
 # Configure sources for test
 CFLAGS += -DTEST 
@@ -65,11 +65,15 @@ else
 CFLAGS += -DNDEBUG
 endif
 
+SRCS = $(wildcard src/*.c) $(wildcard src/modem/*c)  $(MOCK_SRC) $(TESTDEF_SRC) \
+	   $(RUNNER_SRC) $(CMOCK_SRC) $(UNITY_SRC)
+
 
 all: example test 
 	@echo "+++ All good."""
 
 example: src/example-at src/example-sim800
+
 
 ifeq ($(TEST_ENABLE),true)
 mocklib: $(MOCK_LIB)
@@ -81,30 +85,7 @@ test: tests/test-parser
 	tests/test-parser
 endif
 
-clean:
-	$(RM) src/example-at src/example-sim800
-	$(RM) src/*.o src/modem/*.o tests/*.o
-ifeq ($(TEST_ENABLE),true)
-	$(RM) -r tests/mock
-	$(RM) tests/*runner.c tests/*runner
-	$(RM) $(MOCK_LIB)
-endif
 
-PARSER = include/attentive/parser.h
-AT = include/attentive/at.h include/attentive/at-unix.h $(PARSER)
-CELLULAR = include/attentive/cellular.h $(AT)
-MODEM = src/modem/common.h $(CELLULAR)
-
-src/parser.o: src/parser.c $(PARSER)
-src/at-unix.o: src/at-unix.c $(AT)
-src/cellular.o: src/cellular.c $(CELLULAR)
-src/modem/common.o: src/modem/common.c $(MODEM)
-src/modem/generic.o: src/modem/generic.c $(MODEM)
-src/modem/sim800.o: src/modem/sim800.c $(MODEM)
-src/modem/telit2.o: src/modem/telit2.c $(MODEM)
-src/example-at.o: src/example-at.c $(AT)
-src/example-sim800.o: src/example-sim800.c $(CELLULAR)
-src/test-parser.o: tests/test-parser.o $(MODEM)
 src/example-at: src/example-at.o src/parser.o src/at-unix.o
 src/example-sim800: src/example-sim800.o src/modem/sim800.o src/modem/common.o src/cellular.o src/at-unix.o src/parser.o
 tests/test-parser: tests/test-parser.o src/parser.o
@@ -130,9 +111,29 @@ tests/mock/mock_%.c: src/modem/%.h
 	@$(MOCK_GEN) $< >/dev/null
 
 $(RUNNER_SRC): %-runner.c: %-test.c
-	@echo "Generating test suite runner '$(notdir $<)': '$(notdir $@)'"
+	@echo "Generating test suite runner '$(notdir $@)'"
 	@$(RUNNER_GEN) $< $@
 
+%.d: %.c $(MOCK_LIB) Makefile.deps
+	@echo "Generating dependency '$(notdir $@)'"
+	$(CC) $(CFLAGS) -MM $< -MF $@
+
+endif
+
+ifneq (clean,$(MAKEFILEGOALS))
+-include Makefile.deps
+endif
+
+Makefile.deps: $(SRCS) 
+		@$(CC) $(CFLAGS) -MM $^ >> $@
+
+clean:
+	$(RM) src/example-at src/example-sim800
+	$(RM) src/*.o src/modem/*.o tests/*.o
+ifeq ($(TEST_ENABLE),true)
+	$(RM) -r tests/mock
+	$(RM) tests/*runner.c tests/*runner
+	$(RM) $(MOCK_LIB)
 endif
 
 .PHONY: all test mocklib clean
