@@ -15,7 +15,7 @@
 
 
 #define PDP_RETRY_THRESHOLD_INITIAL     3
-#define PDP_RETRY_THRESHOLD_MULTIPLIER  2
+#define PDP_RETRY_THRESHOLD_MULTIPLIER  3
 
 /*
  * PDP management logic.
@@ -35,12 +35,17 @@ int cellular_pdp_request(struct cellular *modem)
 {
     assert(modem != NULL);
     assert(modem->ops != NULL);
+    assert(PDP_RETRY_THRESHOLD_MULTIPLIER > 0);
 
     if (modem->pdp_failures >= modem->pdp_threshold) {
+        /* Not initalized, return */
+        if (!modem->pdp_threshold) {
+            return -1;
+        }
         /* Possibly stuck PDP context; close it. */
         modem->ops->pdp_close(modem);
         /* Perform exponential backoff. */
-        modem->pdp_threshold *= (1+PDP_RETRY_THRESHOLD_MULTIPLIER);
+        modem->pdp_threshold *= PDP_RETRY_THRESHOLD_MULTIPLIER;
     }
 
     if (modem->ops->pdp_open(modem, modem->apn) != 0) {

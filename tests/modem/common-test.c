@@ -10,6 +10,7 @@
 #include <unity.h>
 
 #include "common.h"
+#include "mock_at-unix.h"
 
 static int expected_action(struct cellular *modem);
 static int expected_fail_action(struct cellular *modem);
@@ -35,23 +36,33 @@ void tearDown(void)
 {
 }
 
-void test_cellular_pdp_request_MaxFailuresReached(void)
+void test_cellular_pdp_request_UseUninitalized(void)
+{
+    given_modem.ops = &ops;
+    ops.pdp_open = unexpected_action;
+    ops.pdp_close = unexpected_action;
+    TEST_ASSERT_EQUAL(-1, cellular_pdp_request(&given_modem));
+}
+
+void test_cellular_pdp_request_MaxFailuresReachedAndPdpOpenSuccess(void)
 {
     given_modem.pdp_failures = 3;
     given_modem.pdp_threshold = 3;
-    
-    TEST_FAIL();
-    TEST_ASSERT_EQUAL(given_modem.pdp_failures);
+    given_modem.ops = &ops;
+    ops.pdp_open = expected_action;
+    ops.pdp_close = expected_action;
+    TEST_ASSERT_EQUAL(0, cellular_pdp_request(&given_modem));
+    TEST_ASSERT_EQUAL(9, given_modem.pdp_threshold);
+    TEST_ASSERT_EQUAL(3, given_modem.pdp_failures);
 }
 
 void test_cellular_pdp_request_PdpOpenFail(void)
 {
-    TEST_FAIL();
-}
-
-void test_cellular_pdp_request_PdpOpenSuccess(void)
-{
-    TEST_FAIL();
+    given_modem.pdp_threshold = 1;
+    given_modem.ops = &ops;
+    ops.pdp_open = expected_fail_action;
+    TEST_ASSERT_EQUAL(-1, cellular_pdp_request(&given_modem));
+    TEST_ASSERT_EQUAL(1, given_modem.pdp_failures);
 }
 
 void test_cellular_pdp_success_BothValues(void)
@@ -71,9 +82,10 @@ void test_cellular_pdp_failure_CheckIncrementCorrectly(void)
     TEST_ASSERT_EQUAL(19, given_modem.pdp_failures);
 }
 
-void test_cellular_op_imei_ShortBuffer(void)
+void test_cellular_op_imei_FormatBufferToShort(void)
 {
-    TEST_FAIL();
+    TEST_ASSERT_EQUAL(-1, cellular_op_imei(&given_modem, NULL, 123456780L));
+    TEST_ASSERT_EQUAL(ENOSPC, errno);
 }
 
 void test_cellular_op_imei_NullResponse(void)
