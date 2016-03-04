@@ -68,7 +68,7 @@ inline void cellular_pdp_failure(struct cellular *modem)
 }
 
 
-int cellular_op_imei(struct cellular *modem, char *buf, size_t len)
+static int cellular_read_string(struct cellular *modem, char *buf, size_t len, const char *at_cmd)
 {
     char fmt[16];
     if (snprintf(fmt, sizeof(fmt), "%%[0-9]%ds", (int) len) >= (int) sizeof(fmt)) {
@@ -77,49 +77,42 @@ int cellular_op_imei(struct cellular *modem, char *buf, size_t len)
     }
 
     at_set_timeout(modem->at, 1);
-    const char *response = at_command(modem->at, "AT+CGSN");
+    const char *response = at_command(modem->at, at_cmd);
     at_simple_scanf(response, fmt, buf);
     buf[len-1] = '\0';
 
     return 0;
+}
+
+static int cellular_read_int(struct cellular *modem, const char *at_cmd, const char *resp_fmt)
+{
+    int val;
+
+    at_set_timeout(modem->at, 1);
+    const char *response = at_command(modem->at, at_cmd);
+    at_simple_scanf(response, resp_fmt, &val);
+
+    return val;
+}
+
+int cellular_op_imei(struct cellular *modem, char *buf, size_t len)
+{
+    return cellular_read_string(modem, buf, len, "AT+CGSN");
 }
 
 int cellular_op_iccid(struct cellular *modem, char *buf, size_t len)
 {
-    char fmt[16];
-    if (snprintf(fmt, sizeof(fmt), "%%[0-9]%ds", (int) len) >= (int) sizeof(fmt)) {
-        errno = ENOSPC;
-        return -1;
-    }
-
-    at_set_timeout(modem->at, 5);
-    const char *response = at_command(modem->at, "AT+CCID");
-    at_simple_scanf(response, fmt, buf);
-    buf[len-1] = '\0';
-
-    return 0;
+    return cellular_read_string(modem, buf, len, "AT+CCID");
 }
 
 int cellular_op_creg(struct cellular *modem)
 {
-    int creg;
-
-    at_set_timeout(modem->at, 1);
-    const char *response = at_command(modem->at, "AT+CREG?");
-    at_simple_scanf(response, "+CREG: %*d,%d", &creg);
-
-    return creg;
+    return cellular_read_int(modem, "AT+CREG?", "+CREG: %*d,%d");
 }
 
 int cellular_op_rssi(struct cellular *modem)
-{
-    int rssi;
-
-    at_set_timeout(modem->at, 1);
-    const char *response = at_command(modem->at, "AT+CSQ");
-    at_simple_scanf(response, "+CSQ: %d,%*d", &rssi);
-
-    return rssi;
+{    
+    return cellular_read_int(modem, "AT+CSQ", "+CSQ: %d,%*d");
 }
 
 int cellular_op_clock_gettime(struct cellular *modem, struct timespec *ts)
