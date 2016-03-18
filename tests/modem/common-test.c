@@ -164,7 +164,18 @@ void test_cellular_op_rssi_InvalidResponse(void)
     TEST_ASSERT_EQUAL(-1, cellular_op_rssi(&given_modem));
 }
 
+void test_cellular_op_clock_gettime_InvalidCommandResponse(void)
+{
+    struct timespec given_ts;
+    at_set_timeout_Expect(&given_at, 1);
+    at_command_ExpectAndReturn(&given_at, "AT+CCLK?", NULL);
+    TEST_ASSERT_EQUAL(-1, cellular_op_clock_gettime(&given_modem, &given_ts));
+}
+
+/* TODO: Implement op_clock_gettime & op_clock_settime later, because it is not used
+ * in our code for now. */
 void test_reminder(void)
 {
     TEST_FAIL_MESSAGE("Implement rest tests");
 }
+

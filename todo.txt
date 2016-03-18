@@ -1,0 +1,10 @@
+Done:
+
+To be done:
+- finish cellular 
+- sim800
+- at-unix
+- parser (rewrite from libcheck)
+- telit2
+- finish common
+

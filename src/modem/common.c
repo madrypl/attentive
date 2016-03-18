@@ -121,6 +121,11 @@ int cellular_op_clock_gettime(struct cellular *modem, struct timespec *ts)
 
     at_set_timeout(modem->at, 1);
     const char *response = at_command(modem->at, "AT+CCLK?");
+    /* FIXME:
+     * buffer is allocated in parser
+     * modem->at->priv->response is returned. 
+     * if any other thread preemptive this thread and do at command
+     * real response will be lost. I don't know is it handled, but have to check it */
     memset(&tm, 0, sizeof(struct tm));
     at_simple_scanf(response, "+CCLK: \"%d/%d/%d,%d:%d:%d%*d\"",
             &tm.tm_year, &tm.tm_mon, &tm.tm_mday,
@@ -128,7 +133,10 @@ int cellular_op_clock_gettime(struct cellular *modem, struct timespec *ts)
 
     /* Most modems report some starting date way in the past when they have
      * no date/time estimation. */
-    if (tm.tm_year < 14) {
+
+    /* TODO: Get rid of this ugly thing. We should develop more sophisticated
+     * timestamp validation */
+    if (tm.tm_year < 14) { 
         errno = EINVAL;
         return 1;
     }
