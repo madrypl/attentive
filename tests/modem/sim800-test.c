@@ -17,8 +17,15 @@ void tearDown(void)
 {
 }
 
+void test_scan_line_VARIOUS_OPTION_HERE(void)
+{
+}
+
+void test_handle_urc_VARIOUS_OPTIONS_HERE(void)
+{
+}
+
 void test_dummy(void)
 {
     TEST_FAIL_MESSAGE("DUMMY TEST");
 }
-

@@ -93,6 +93,8 @@ static void handle_urc(const char *line, size_t len, void *arg)
 
     if (sscanf(line, "+FTPGET: 1,%d", &priv->ftpget1_status) == 1)
         return;
+    /* TODO: what is going on here? ftpget1_status flag is set, 
+     * what about other urcs? */
 }
 
 static const struct at_callbacks sim800_callbacks = {
