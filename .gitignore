@@ -14,3 +14,6 @@ tests/*runner.c
 tests/modem/*runner
 tests/modem/*runner.c
 libmock.a
+Makefile.deps
+project.vs
+
