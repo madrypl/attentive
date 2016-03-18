@@ -120,7 +120,7 @@ $(RUNNER_SRC): %-runner.c: %-test.c
 
 endif
 
-ifneq (clean,$(MAKEFILEGOALS))
+ifneq (clean,$(MAKECMDGOALS))
 -include Makefile.deps
 endif
 
@@ -132,7 +132,7 @@ clean:
 	$(RM) src/*.o src/modem/*.o tests/*.o
 ifeq ($(TEST_ENABLE),true)
 	$(RM) -r tests/mock
-	$(RM) tests/*runner.c tests/*runner
+	$(RM) tests/*runner* tests/modem/*runner*
 	$(RM) $(MOCK_LIB)
 endif
 
