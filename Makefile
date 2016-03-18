@@ -12,12 +12,23 @@ INCLUDES = include src src/modem
 LIBRARIES = check glib-2.0 
 
 TEST_ENABLE ?= false
+PROFILE ?= false
 
 ifeq ($(TEST_ENABLE),true)
+
 RUBY ?= ruby
 
 # Configure sources for test
 CFLAGS += -DTEST 
+
+# Enable gcov profiling to find out what test-coverage is
+# Profiling is only available when test is enabled
+ifeq ($(PROFILE),true)
+CFLAGS += -fprofile-arcs -ftest-coverage
+LDLIBS += -fprofile-arcs -ftest-coverage
+GCOV_PREFIX =
+GCOV_PREFIX_STRIP =
+endif
 
 # Mocking library
 CMOCK = lib/cmock
@@ -85,7 +96,6 @@ test: tests/test-parser
 	tests/test-parser
 endif
 
-
 src/example-at: src/example-at.o src/parser.o src/at-unix.o
 src/example-sim800: src/example-sim800.o src/modem/sim800.o src/modem/common.o src/cellular.o src/at-unix.o src/parser.o
 tests/test-parser: tests/test-parser.o src/parser.o
@@ -130,10 +140,10 @@ Makefile.deps: $(SRCS)
 clean:
 	$(RM) src/example-at src/example-sim800
 	$(RM) src/*.o src/modem/*.o tests/*.o
-ifeq ($(TEST_ENABLE),true)
+	$(RM) src/*.gcno src/modem/*.gcno tests/*.gcno
+	$(RM) src/*.gcda src/modem/*.gcda tests/*.gcda
 	$(RM) -r tests/mock
 	$(RM) tests/*runner* tests/modem/*runner*
 	$(RM) $(MOCK_LIB)
-endif
 
 .PHONY: all test mocklib clean
