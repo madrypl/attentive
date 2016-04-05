@@ -135,6 +135,35 @@ static void parser_finalize(struct at_parser *parser)
     parser->buf[parser->buf_used] = '\0';
 }
 
+static enum at_response_type determine_response_type(struct at_parser *parser)
+{
+    /* Extract line address & length for later use. */
+    const char *line = parser->buf + parser->buf_current;
+    size_t len = parser->buf_used - parser->buf_current;
+    
+    /* Log the received line. */
+    printf("< '%.*s'\n", (int) len, line);
+
+    enum at_response_type type = AT_RESPONSE_UNKNOWN;
+    if (parser->cbs->scan_line)
+        type = parser->cbs->scan_line(line, len, parser->priv);
+    if (!type)
+        type = generic_line_scanner(line, len, parser);
+    return type;
+}
+
+static void fire_urc_handler(struct at_parser *parser)
+{
+    /* Fire the callback on the URC line. */
+    parser->cbs->handle_urc(parser->buf + parser->buf_current,
+                            parser->buf_used - parser->buf_current,
+                            parser->priv);
+
+    /* Discard the URC line from the buffer. */
+    parser_discard_line(parser);
+}
+
+
 /**
  * Helper, called whenever a full response line is collected.
  */
@@ -146,32 +175,14 @@ static void parser_handle_line(struct at_parser *parser)
 
     /* NULL-terminate the response .*/
     parser->buf[parser->buf_used] = '\0';
-
-    /* Extract line address & length for later use. */
-    const char *line = parser->buf + parser->buf_current;
-    size_t len = parser->buf_used - parser->buf_current;
-
-    /* Log the received line. */
-    printf("< '%.*s'\n", (int) len, line);
-
+    
     /* Determine response type. */
-    enum at_response_type type = AT_RESPONSE_UNKNOWN;
-    if (parser->cbs->scan_line)
-        type = parser->cbs->scan_line(line, len, parser->priv);
-    if (!type)
-        type = generic_line_scanner(line, len, parser);
+    enum at_response_type type = determine_response_type(parser);
 
     /* Expected URCs and all unexpected lines are sent to URC handler. */
     if (type == AT_RESPONSE_URC || parser->state == STATE_IDLE)
     {
-        /* Fire the callback on the URC line. */
-        parser->cbs->handle_urc(parser->buf + parser->buf_current,
-                                parser->buf_used - parser->buf_current,
-                                parser->priv);
-
-        /* Discard the URC line from the buffer. */
-        parser_discard_line(parser);
-
+        fire_urc_handler(parser);
         return;
     }
 

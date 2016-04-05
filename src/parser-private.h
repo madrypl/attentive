@@ -31,10 +31,11 @@ struct at_parser {
     size_t data_left;
     int nibble;
 
-    char *buf;
     size_t buf_used;
     size_t buf_size;
     size_t buf_current;
+
+    char *buf;
 };
 
 #endif
