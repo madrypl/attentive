@@ -104,19 +104,27 @@ static enum at_response_type generic_line_scanner(const char *line, size_t len, 
         return AT_RESPONSE_INTERMEDIATE;
 }
 
-static void parser_append(struct at_parser *parser, char ch)
+static int parser_append(struct at_parser *parser, char ch)
 {
     if (parser->buf_used < parser->buf_size-1)
+    {
         parser->buf[parser->buf_used++] = ch;
+        return 0;
+    }
+    errno = EOVERFLOW;
+    return -1;
 }
 
-static void parser_include_line(struct at_parser *parser)
+static int parser_include_line(struct at_parser *parser)
 {
     /* Append a newline. */
-    parser_append(parser, '\n');
-
-    /* Advance the current command pointer to the new position. */
-    parser->buf_current = parser->buf_used;
+    if (!parser_append(parser, '\n'))
+    {
+        /* Advance the current command pointer to the new position. */
+        parser->buf_current = parser->buf_used;
+        return 0;
+    } 
+    return -1;
 }
 
 static void parser_discard_line(struct at_parser *parser)
